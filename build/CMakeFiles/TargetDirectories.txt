@@ -1,0 +1,3 @@
+/home/milan/mappedmem/build/CMakeFiles/mappedmem.dir
+/home/milan/mappedmem/build/CMakeFiles/edit_cache.dir
+/home/milan/mappedmem/build/CMakeFiles/rebuild_cache.dir
