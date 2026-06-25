@@ -8,18 +8,19 @@ int main() {
     Process::cleanMaps();
 
     for (const auto& [pid, proc] : Process::procs) {
-        fmt::print("pid: {}", pid);
+        fmt::print("{} - pid: {}", proc.procName, pid);
     }
     uint32_t choice {};
     fmt::print("Select a proc: ");
     std::cin >> choice;
 
     auto mem_dump = Process::readProcMem(choice);
-    const auto& proc = Process::procs[24];
+    const auto& proc = Process::procs[choice];
     size_t size {};
     if (mem_dump) {
         size = mem_dump->size();
-        for (size_t i = 0; i < size; ++i) {
+        Process::cleanMaps();
+        for (size_t i = 0; i < 1; ++i) {    // Set to 1 region limit for now
             const auto& mr = proc.memRegions[i];
             size_t region_size = mr.end - mr.start;
 

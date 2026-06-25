@@ -9,6 +9,7 @@
 #include <sys/uio.h>
 #include <optional>
 #include <fmt/format.h>
+#include <vector>
 
 using namespace Process;
 
@@ -94,6 +95,13 @@ void Process::cleanMaps() {
 
 std::optional<std::vector<std::unique_ptr<char[]>>> Process::readProcMem(const uint32_t& processId) {
     Process::Proc proc = procs[processId];
+
+    // Remove unreadable regions again closer to time of buffer allocation and syscall
+    for (int i = 0; i < proc.memRegions.size(); ++i) {
+        if (proc.memRegions[i].perms[0] != 'r') {
+            proc.memRegions.erase(proc.memRegions.begin() + i);
+        }
+    }
     size_t size = proc.memRegions.size();
     if (size == 0) {
         std::cerr << "Error: memRegions empty" << std::endl;
@@ -123,7 +131,7 @@ std::optional<std::vector<std::unique_ptr<char[]>>> Process::readProcMem(const u
     
     if (read < 0) {
         // Syscall failing
-        std::cerr << "Error: process_vm_readv failed";
+        std::cerr << "Error: " << std::strerror(errno);
         return std::nullopt;
     }
     
