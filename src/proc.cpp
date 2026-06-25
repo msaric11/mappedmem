@@ -130,7 +130,6 @@ std::optional<std::vector<std::unique_ptr<char[]>>> Process::readProcMem(const u
     ssize_t read = process_vm_readv(processId, local_iov.get(), size, remote_iov.get(), size, 0);
     
     if (read < 0) {
-        // Syscall failing
         std::cerr << "Error: " << std::strerror(errno);
         return std::nullopt;
     }
