@@ -17,7 +17,7 @@ fetchcontent_makeavailable(hello_imgui)
 
 find_package(fmt REQUIRED)
 
-add_executable(mappedmem src/main.cpp src/proc.cpp)
+add_executable(mappedmem src/main.cpp src/proc.cpp src/app.cpp)
 
 
 target_link_libraries(mappedmem PRIVATE fmt::fmt hello_imgui)

@@ -2,6 +2,7 @@
 #include "proc.hpp"
 #include <iostream>
 #include "hello_imgui/hello_imgui.h"
+#include "app.hpp"
 #include "imgui.h"
 
 int main() {
@@ -17,30 +18,20 @@ int main() {
         fmt::print("Select a proc: ");
         std::cin >> choice;
 
-        auto mem_dump = Process::readProcMem(choice);
-        const auto& proc = Process::procs[choice];
-        size_t size {};
+        const auto proc = Process::procs[choice];
+        const auto mem_dump = Process::readProcMem(choice);
         if (mem_dump) {
-            size = mem_dump->size();
             Process::cleanMaps();
-            for (size_t i = 0; i < 1; ++i) {    // Set to 1 region limit for now
-                const auto& mr = proc.memRegions[i];
-                size_t region_size = mr.end - mr.start;
-
-                fmt::print("\n--- Dumping Region: {} [0x{:X} - 0x{:X}] ---\n", 
-                        mr.name, mr.start, mr.end);
-                auto& buffer = (*mem_dump)[i];
-                Process::printCacheLines(buffer.get(), region_size, mr.start);
-            }
+            HelloImGui::SimpleRunnerParams params;
+            params.windowTitle = proc.procName;
+            params.iniDisable = true;
+            params.guiFunction = [&]() { renderMemTable(mem_dump, proc); };
+            HelloImGui::Run(params);
         }
+
+      
     #else
         fmt::print("Linux not detected\n");
     #endif
     
-
-    HelloImGui::RunnerParams params;
-    params.appWindowParams.windowTitle = "mappedmem";
-
-
-    HelloImGui::Run(params);
 }
