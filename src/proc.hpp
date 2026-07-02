@@ -14,6 +14,7 @@ namespace Process {
         uintptr_t end;      
         std::string perms;
         // Path to file of pertaining to specific MemRegion of process
+        // [anon] if empty 
         std::string name;
     };
 
@@ -23,9 +24,14 @@ namespace Process {
         std::vector<MemRegion> memRegions;
     };
 
-    static const std::filesystem::path PROC_GLOBAL_PATH = "/proc/";
-    extern std::unordered_map<uint32_t, Proc> procs;
+    struct ProcsState {
+        std::unordered_map<uint32_t, Process::Proc> procs;
+        uint32_t selectedProc{};
+        std::vector<std::unique_ptr<char[]>> memBuffers;
+    };
 
+    static const std::filesystem::path PROC_GLOBAL_PATH = "/proc/";
+    extern ProcsState state;
 
     // Check if dir is a proc based on whether it converts to int. Extract pid in the process
     bool dirIsProc(const std::filesystem::directory_entry& entry, Proc& proc);

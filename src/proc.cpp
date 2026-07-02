@@ -13,8 +13,8 @@
 
 #if defined(__linux__)
     using namespace Process;
-
-    std::unordered_map<uint32_t, Process::Proc> Process::procs;
+    
+    Process::ProcsState Process::state;
 
     bool Process::dirIsProc(const std::filesystem::directory_entry& entry, Proc& proc) {
         try {
@@ -27,7 +27,6 @@
     }
 
     void Process::collectProcNames() {
-
         for (const auto& entry : std::filesystem::directory_iterator(PROC_GLOBAL_PATH)) {
             if (!entry.is_directory()) continue;
             Process::Proc proc{};
@@ -43,14 +42,13 @@
                     proc.procName = comm_name; 
                     }
                 } else { continue; }
-                procs[proc.procId] = proc;
+                state.procs[proc.procId] = proc;
             } else { continue; }
         }
     }
 
     void Process::parseMaps() {
-
-        for (auto& [pid, proc] : Process::procs) {
+        for (auto& [pid, proc] : state.procs) {
             std::string pid_string = std::to_string(pid);
             std::filesystem::path maps_path = PROC_GLOBAL_PATH / pid_string  / "maps";
 
@@ -86,23 +84,19 @@
 
     void Process::cleanMaps() {
         // Have to use iterator because proc entry cannot be removed while looping through it
-        for (auto it = Process::procs.begin(); it != Process::procs.end(); ) {
+        for (auto it = state.procs.begin(); it != state.procs.end(); ) {
             if (it->second.memRegions.empty()) {
-                it = Process::procs.erase(it);
+                it = state.procs.erase(it);
             }
             else { ++it; }
         }
     }
 
     std::optional<std::vector<std::unique_ptr<char[]>>> Process::readProcMem(const uint32_t& processId) {
-        Process::Proc proc = procs[processId];
+        // Changed proc to reference instead of copying data
+        Process::Proc& proc = state.procs[processId];
 
-        // Remove unreadable regions again closer to time of buffer allocation and syscall
-        for (int i = 0; i < proc.memRegions.size(); ++i) {
-            if (proc.memRegions[i].perms[0] != 'r') {
-                proc.memRegions.erase(proc.memRegions.begin() + i);
-            }
-        }
+        
         size_t size = proc.memRegions.size();
         if (size == 0) {
             std::cerr << "Error: memRegions empty" << std::endl;

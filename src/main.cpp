@@ -7,26 +7,25 @@
 
 int main() {
     #if defined( __linux__)
+
         Process::collectProcNames();
         Process::parseMaps();
         Process::cleanMaps();
 
-        for (const auto& [pid, proc] : Process::procs) {
+        for (const auto& [pid, proc] : Process::state.procs) {
             fmt::print("{} - pid: {}", proc.procName, pid);
         }
         uint32_t choice {};
         fmt::print("Select a proc: ");
         std::cin >> choice;
+        Process::state.selectedProc = choice;
 
-        const auto proc = Process::procs[choice];
-        const auto mem_dump = Process::readProcMem(choice);
+        const Process::Proc& proc = Process::state.procs[Process::state.selectedProc];
+        auto mem_dump = Process::readProcMem(choice);
         if (mem_dump) {
+            Process::state.memBuffers = std::move(*mem_dump);
             Process::cleanMaps();
-            HelloImGui::SimpleRunnerParams params;
-            params.windowTitle = proc.procName;
-            params.iniDisable = true;
-            params.guiFunction = [&]() { renderMemTable(mem_dump, proc); };
-            HelloImGui::Run(params);
+            runRender();
         }
 
       
