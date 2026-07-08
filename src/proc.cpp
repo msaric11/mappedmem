@@ -11,6 +11,9 @@
 #include <fmt/format.h>
 #include <vector>
 
+
+
+
 #if defined(__linux__)
     using namespace Process;
     
@@ -94,7 +97,7 @@
 
     std::optional<std::vector<std::unique_ptr<char[]>>> Process::readProcMem(const uint32_t& processId) {
         // Changed proc to reference instead of copying data
-        Process::Proc& proc = state.procs[processId];
+        Process::Proc& proc = state.procs.at(processId);
 
         
         size_t size = proc.memRegions.size();
@@ -131,30 +134,19 @@
         
         return buffers;
     }
-
-    void Process::printCacheLines(const char* buffer, size_t size, uintptr_t base_address) {
-        const size_t CACHE_LINE_SIZE = 64; // 64 Bytes per line
-
-        // Iterate through the buffer in 64-byte steps
-        for (size_t i = 0; i < size; i += CACHE_LINE_SIZE) {
-            
-            // 1. Print the starting memory address of this specific cache line
-            fmt::print("0x{:016X} | ", base_address + i);
-
-            // 2. Iterate through the 64-byte block in 8-byte (64-bit) chunks
-            for (size_t j = 0; j < CACHE_LINE_SIZE && (i + j) < size; j += 8) {
-                
-                // Check if we have a full 8 bytes left to read
-                if (i + j + 8 <= size) {
-                    // Safely cast the next 8 bytes into an unsigned 64-bit integer
-                    uint64_t chunk = *reinterpret_cast<const uint64_t*>(buffer + i + j);
-                    fmt::print("{:016X} ", chunk);
-                } else {
-                    // If the memory region ends abruptly, print padding
-                    fmt::print("{:<16} ", "........");
-                }
-            }
-            fmt::print("\n");
+    
+    void Process::selectProc(uint32_t selectedProc) {
+        if (selectedProc == state.selectedProc) return;
+        state.selectedProc = selectedProc;
+        auto mem_dump = readProcMem(state.selectedProc);
+        if (mem_dump) {
+            state.memBuffers = std::move(*mem_dump);
         }
     }
+    
+    void Process::selectRegion(size_t regionIdx) {
+        state.selectedRegion = regionIdx;
+}
+
+    
 #endif

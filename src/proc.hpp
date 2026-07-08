@@ -27,6 +27,7 @@ namespace Process {
     struct ProcsState {
         std::unordered_map<uint32_t, Process::Proc> procs;
         uint32_t selectedProc{};
+        size_t selectedRegion{};
         std::vector<std::unique_ptr<char[]>> memBuffers;
     };
 
@@ -45,5 +46,7 @@ namespace Process {
     void cleanMaps();
     // Use process_vm_readv syscall to access and read the registers of the given process
     std::optional<std::vector<std::unique_ptr<char[]>>> readProcMem(const uint32_t& processId);
-    void printCacheLines(const char* buffer, size_t size, uintptr_t base_address);
+    // Wrapper to call readProcMem when user clicks a given proc
+    void selectProc(uint32_t selectedProc);
+    void selectRegion(size_t regionIdx);
 }
